@@ -1,0 +1,277 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using static System.Console;
+
+namespace Application_project
+{
+    internal class Program
+    {
+            const int maxCustomers = 100;
+            static List<string> AccountHolders = new List<string>();
+            static List<int> accountNo = new List<int>();
+            static List<double> balance = new List<double>();
+            static List<int> pin = new List<int>();
+            static List<string> gender = new List<string>();
+            static List<List<string>> transactionHistory = new List<List<string>>();
+
+            static Random random = new Random();
+
+            static void Main(string[] args)
+            {
+                int choice;
+
+                while (true)
+                {
+                    choice = GetOption();
+                    WriteLine();
+
+                    switch (choice)
+                    {
+                        case 1:
+                        CreateAcc();
+                        WriteLine();
+                            break;
+                        case 2:
+                        WriteLine();
+                        DisplayAccountDetails();
+                        WriteLine();
+                            break;
+                        case 3:
+                        WriteLine();
+                        Deposit();
+                        WriteLine();
+                        break;
+                        case 4:
+                        WriteLine();
+                        Withdraw();
+                        WriteLine();
+                        break;
+                        case 5:
+                            WriteLine("Thank you for using our service!!!");
+                            return;
+                    }
+
+                    WriteLine("Thank you for using our service!!!");
+                }
+            }
+
+            static int GetOption()
+            {
+                WriteLine("Welcome to the Multi-Account Banking system!");
+                WriteLine();
+                WriteLine("1. Create a new account");
+                WriteLine("2. View Account Details");
+                WriteLine("3. Deposit Funds");
+                WriteLine("4. Withdraw Funds");
+                WriteLine("5. Exit");
+                Write("Enter your option: ");
+
+                if (int.TryParse(ReadLine(), out int choice) && choice >= 1 && choice <= 5)
+                {
+                    return choice;
+                }
+
+                WriteLine("Invalid option! Please enter a valid option between 1 and 5.");
+                return GetOption();
+            }
+
+            static void CreateAcc()
+            {
+                if (AccountHolders.Count >= maxCustomers)
+                {
+                    WriteLine("Maximum number of customers reached. Cannot create a new account.");
+                    return;
+                }
+
+                WriteLine();
+                Write("Enter account holder's first name: ");
+                string firstName = ReadLine();
+                Write("Enter account holder's surname: ");
+                string surname = ReadLine();
+                string name = $"{firstName[0]}. {surname}";
+                AccountHolders.Add(name.ToUpper());
+
+                Write("Enter your gender (F/M): ");
+                char gen = char.Parse(ReadLine().ToUpper());
+
+                while (gen != 'M' && gen != 'F')
+                {
+                    Write("Incorrect gender. Enter your gender (F/M): ");
+                    gen = char.Parse(ReadLine().ToUpper());
+                }
+
+                gender.Add(gen == 'M' ? "MR" : "Ms");
+
+                int newAccountNo = GenerateAccountNumber();
+                accountNo.Add(newAccountNo);
+                WriteLine($"Your new account number is: {newAccountNo}");
+
+                Write("Create your new 4-digit pin: ");
+                int pin1 = int.Parse(ReadLine());
+                Write("Confirm your new pin: ");
+                int pin2 = int.Parse(ReadLine());
+
+                while (pin1 != pin2)
+                {
+                    WriteLine("Pins do not match. Try again.");
+                    Write("Create your new 4-digit pin: ");
+                    pin1 = int.Parse(ReadLine());
+                    Write("Confirm your new pin: ");
+                    pin2 = int.Parse(ReadLine());
+                }
+
+                pin.Add(pin1);
+
+                Write("Do you want to deposit some amount (Y/N): ");
+                char ans = char.Parse(ReadLine().ToUpper());
+
+                while (ans != 'N' && ans != 'Y')
+                {
+                    Write("Invalid option. Do you want to deposit some amount (Y/N): ");
+                    ans = char.Parse(ReadLine().ToUpper());
+                }
+
+                double initialDeposit = 0;
+                if (ans == 'Y')
+                {
+                    Write("Enter the amount you want to deposit: ");
+                    initialDeposit = double.Parse(ReadLine());
+                }
+
+                balance.Add(initialDeposit);
+                transactionHistory.Add(new List<string> { $"Account created with initial deposit: {initialDeposit:C2}" });
+
+                WriteLine("Account created successfully.");
+            }
+
+            static int GenerateAccountNumber()
+            {
+                return random.Next(1000000000, 2000000000);
+            }
+
+            static void DisplayAccountDetails()
+            {
+                if (AccountHolders.Count == 0)
+                {
+                    WriteLine("No customers currently.");
+                    return;
+                }
+
+                WriteLine("Enter the number corresponding to the account holder's name:");
+                for (int i = 0; i < AccountHolders.Count; i++)
+                {
+                    WriteLine("{0}. {1}", i + 1, AccountHolders[i]);
+                }
+
+                int num = int.Parse(ReadLine()) - 1;
+
+                if (num < 0 || num >= AccountHolders.Count)
+                {
+                    WriteLine("Invalid selection.");
+                    return;
+                }
+
+                Write("Enter pin for {0} {1} account number: {2}: ", gender[num], AccountHolders[num], accountNo[num]);
+                int pin1 = int.Parse(ReadLine());
+
+                for (int attempts = 0; attempts < 3; attempts++)
+                {
+                    if (pin1 == pin[num])
+                    {
+                        WriteLine("The balance for account number {0} is {1:C2}. Account holder: {2} {3}.", accountNo[num], balance[num], gender[num], AccountHolders[num]);
+                        WriteLine("Transaction History:");
+                        foreach (var transaction in transactionHistory[num])
+                        {
+                            WriteLine(transaction);
+                        }
+                        return;
+                    }
+
+                    WriteLine("Incorrect pin.");
+                    if (attempts < 2)
+                    {
+                        Write("Enter pin for {0} {1} account number {2}: ", gender[num], AccountHolders[num], accountNo[num]);
+                        pin1 = int.Parse(ReadLine());
+                    }
+                    else
+                    {
+                        WriteLine("Too many attempts, try again later.");
+                    }
+                }
+            }
+
+            static void Deposit()
+            {
+                Write("Enter your account number: ");
+                int num = int.Parse(ReadLine());
+                int index = accountNo.IndexOf(num);
+
+                if (index < 0)
+                {
+                    WriteLine("Account number not found. Please check the number or create a new account.");
+                    return;
+                }
+
+                Write("Enter the amount you want to deposit: ");
+                double amount = double.Parse(ReadLine());
+
+                balance[index] += amount;
+                transactionHistory[index].Add($"Deposited: {amount:C2} | New Balance: {balance[index]:C2}");
+                WriteLine("Amount deposited successfully.");
+            }
+
+            static void Withdraw()
+            {
+                Write("Enter your account number: ");
+                int num = int.Parse(ReadLine());
+                int index = accountNo.IndexOf(num);
+
+                if (index < 0)
+                {
+                    WriteLine("Account number not found. Please check the number or create a new account.");
+                    return;
+                }
+
+                Write("Enter pin for {0} {1} account number {2}: ", gender[index], AccountHolders[index], accountNo[index]);
+                int pin1 = int.Parse(ReadLine());
+
+                for (int attempts = 0; attempts < 3; attempts++)
+                {
+                    if (pin1 == pin[index])
+                    {
+                        WriteLine("The balance for account number {0} is {1:C2}. Account holder: {2} {3}.", accountNo[index], balance[index], gender[index], AccountHolders[index]);
+                        Write("Enter the amount you want to withdraw: ");
+                        double amount = double.Parse(ReadLine());
+
+                        if (amount > balance[index])
+                        {
+                            WriteLine("Transaction unsuccessful. Amount exceeds available balance.");
+                        }
+                        else
+                        {
+                            balance[index] -= amount;
+                            transactionHistory[index].Add($"Withdrew: {amount:C2} | New Balance: {balance[index]:C2}");
+                            WriteLine("Amount withdrawn successfully.");
+                        }
+                        return;
+                    }
+
+                    WriteLine("Incorrect pin.");
+                    if (attempts < 2)
+                    {
+                        Write("Enter pin for {0} {1} account number {2}: ", gender[index], AccountHolders[index], accountNo[index]);
+                        pin1 = int.Parse(ReadLine());
+                    }
+                    else
+                    {
+                        WriteLine("Too many attempts, try again later.");
+                    }
+                }
+            }
+        }
+    }
+
+    
